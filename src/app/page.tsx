@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -11,6 +11,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  ChartData,
 } from "chart.js";
 
 ChartJS.register(
@@ -23,16 +24,21 @@ ChartJS.register(
   Legend
 );
 
+const initialChartData: ChartData<"line"> = {
+  labels: [],
+  datasets: [],
+};
+
 export default function Home() {
   const [currentPlan, setCurrentPlan] = useState(5000);
   const [newPlan, setNewPlan] = useState(2000);
   const [transferMonth, setTransferMonth] = useState(1);
   const [cancellationFee, setCancellationFee] = useState(20000);
   const [mnpFee, setMnpFee] = useState(3000);
-  const [chartData, setChartData] = useState({});
+  const [chartData, setChartData] = useState<ChartData<"line">>(initialChartData);
   const [resultText, setResultText] = useState("");
 
-  const calculateChartData = () => {
+  const calculateChartData = useCallback(() => {
     const labels = Array.from({ length: 61 }, (_, i) => `${i}ヶ月`);
 
     const currentPlanData = labels.map((_, i) => currentPlan * i);
@@ -86,11 +92,11 @@ export default function Home() {
         },
       ],
     });
-  };
+  }, [currentPlan, newPlan, transferMonth, cancellationFee, mnpFee]);
 
   useEffect(() => {
     calculateChartData();
-  }, [currentPlan, newPlan, transferMonth, cancellationFee, mnpFee]);
+  }, [calculateChartData]);
 
   return (
     <main className="flex min-h-screen flex-col items-center p-4 md:p-24">
@@ -171,7 +177,7 @@ export default function Home() {
         </div>
 
         <div className="mt-8">
-          {chartData.labels && (
+          {chartData.labels && chartData.labels.length > 0 && (
             <Line
               options={{
                 responsive: true,
